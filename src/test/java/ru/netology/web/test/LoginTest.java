@@ -9,8 +9,6 @@ import ru.netology.web.data.BaseSQL;
 import ru.netology.web.data.DataHelper;
 import ru.netology.web.page.LoginPage;
 
-import java.sql.SQLException;
-
 import static com.codeborne.selenide.Selenide.open;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -25,30 +23,30 @@ public class LoginTest {
     }
 
     @Test
-    void shouldLoginValid() throws SQLException {
+    void shouldLoginValid() {
         val loginPage = new LoginPage();
         val authInfo = DataHelper.getAuthInfoValid();
         val verificationPage = loginPage.validLogin(authInfo);
-        val verificationCode = BaseSQL.getVerificationCode(authInfo.getLogin());
+        val verificationCode = BaseSQL.getVerificationCode();
         val verify = verificationPage.validVerify(verificationCode);
         verify.dashboardPageVisible();
     }
 
     @Test
-    void shouldBlockedAfterThreePasswords() throws SQLException {
+    void shouldBlockedAfterThreePasswords() {
         val loginPage = new LoginPage();
         val authInfo = DataHelper.getAuthInfoInvalid();
-        loginPage.validLogin(authInfo);
+        loginPage.login(authInfo);
         loginPage.cleanLoginFields();
-        loginPage.validLogin(authInfo);
+        loginPage.login(authInfo);
         loginPage.cleanLoginFields();
-        loginPage.validLogin(authInfo);
-        val statusSQL = mySQL.getStatus(authInfo.getLogin());
+        loginPage.login(authInfo);
+        val statusSQL = mySQL.getStatus();
         assertEquals("blocked", statusSQL);
     }
 
     @AfterAll
-    static void clean() throws SQLException {
+    static void clean() {
         BaseSQL.cleanBase();
     }
 }

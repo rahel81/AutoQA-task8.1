@@ -7,68 +7,54 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class BaseSQL {
-
     public static Connection getConnection() throws SQLException {
-        Connection connection = DriverManager.getConnection(
+        final Connection connection = DriverManager.getConnection(
                 "jdbc:mysql://localhost:3306/app", "app", "pass");
         return connection;
     }
-
-    public static String getVerificationCode(String login) throws SQLException {
-        String userId = null;
-        val dataSQL = "SELECT id FROM users WHERE login = ?;";
+    public static String getVerificationCode() {
         try (val conn = getConnection();
-             val idStmt = conn.prepareStatement(dataSQL);
-        ) {
-            idStmt.setString(1, login);
-            try (val rs = idStmt.executeQuery()) {
-                if (rs.next()) {
-                    userId = rs.getString("id");
-                }
+             val countStmt = conn.createStatement()) {
+            val dataSQL = "SELECT code FROM auth_codes ORDER BY created DESC LIMIT 1";
+            val resultSet = countStmt.executeQuery(dataSQL);
+            if (resultSet.next()) {
+                return resultSet.getString("code");
             }
+        } catch (SQLException exception) {
+            throw new RuntimeException(exception);
         }
-        String code = null;
-        val authCode = "SELECT code FROM auth_codes WHERE user_id = ? order by created desc limit 1;";
-        try (val conn = getConnection();
-             val codeStmt = conn.prepareStatement(authCode);
-        ) {
-            codeStmt.setString(1, userId);
-            try (val rs = codeStmt.executeQuery()) {
-                if (rs.next()) {
-                    code = rs.getString("code");
-                }
-            }
-        }
-        return code;
+        return null;
     }
 
-    public String getStatus(String login) throws SQLException {
-        String statusSQL = "SELECT status FROM users WHERE login = ?;";
-        String status = null;
+    public String getStatus() {
         try (val conn = getConnection();
-             val statusStmt = conn.prepareStatement(statusSQL);) {
-            statusStmt.setString(1, login);
-            try (val rs = statusStmt.executeQuery()) {
-                if (rs.next()) {
-                    status = rs.getString("status");
-                }
+             val countStmt = conn.createStatement()) {
+            String statusSQL = "SELECT status FROM users WHERE login";
+            val resultSet = countStmt.executeQuery(statusSQL);
+            if (resultSet.next()) {
+                return resultSet.getString("status");
             }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
         }
-        return status;
+        return null;
     }
 
-    public static void cleanBase() throws SQLException {
+    public static void cleanBase() {
         String deleteCards = "DELETE FROM cards; ";
         String deleteAuthCodes = "DELETE FROM auth_codes; ";
         String deleteUsers = "DELETE FROM users; ";
         try (val conn = BaseSQL.getConnection();
              val deleteCardsStmt = conn.createStatement();
              val deleteAuthCodesStmt = conn.createStatement();
-             val deleteUsersStmt = conn.createStatement();
+             val deleteUsersStmt = conn.createStatement()
         ) {
             deleteCardsStmt.executeUpdate(deleteCards);
             deleteAuthCodesStmt.executeUpdate(deleteAuthCodes);
             deleteUsersStmt.executeUpdate(deleteUsers);
+
+        } catch (SQLException exception) {
+            throw new RuntimeException(exception);
         }
     }
 }
