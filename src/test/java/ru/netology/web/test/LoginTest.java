@@ -13,7 +13,6 @@ import static com.codeborne.selenide.Selenide.open;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LoginTest {
-    BaseSQL mySQL = new BaseSQL();
 
     @BeforeEach
     void setup() {
@@ -41,7 +40,7 @@ public class LoginTest {
         loginPage.login(authInfo);
         loginPage.cleanLoginFields();
         loginPage.login(authInfo);
-        val statusSQL = mySQL.getStatus();
+        val statusSQL = BaseSQL.getStatus(authInfo);
         assertEquals("blocked", statusSQL);
     }
 

@@ -7,11 +7,16 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class BaseSQL {
+
+    private BaseSQL() {
+    }
+
     public static Connection getConnection() throws SQLException {
         final Connection connection = DriverManager.getConnection(
                 "jdbc:mysql://localhost:3306/app", "app", "pass");
         return connection;
     }
+
     public static String getVerificationCode() {
         try (val conn = getConnection();
              val countStmt = conn.createStatement()) {
@@ -26,11 +31,12 @@ public class BaseSQL {
         return null;
     }
 
-    public String getStatus() {
+    public static String getStatus(DataHelper.AuthInfo authInfo) {
+        String statusSQL = "SELECT status FROM users WHERE login=?";
         try (val conn = getConnection();
-             val countStmt = conn.createStatement()) {
-            String statusSQL = "SELECT status FROM users WHERE login";
-            val resultSet = countStmt.executeQuery(statusSQL);
+             val prepareStmt = conn.prepareStatement(statusSQL)) {
+            prepareStmt.setString(1, authInfo.getLogin());
+            val resultSet = prepareStmt.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getString("status");
             }
@@ -39,6 +45,7 @@ public class BaseSQL {
         }
         return null;
     }
+
 
     public static void cleanBase() {
         String deleteCards = "DELETE FROM cards; ";
